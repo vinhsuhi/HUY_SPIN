@@ -218,6 +218,70 @@ class GraphCollection():
             
         return Q,R
 
+    def explorePrevailGraph(self,topo: np.ndarray):
+        if topo.shape == (1,1):
+            return topo
+        subTopo = np.zeros((topo.shape[0],topo.shape[1]),dtype=int)
+        diagonal = topo.diagonal()
+        freqGraphs = []
+        listSubTopo = []
+        for i,node in enumerate(diagonal):
+            subNodes = diagonal.copy()
+            # print(subNodes,i)
+            subNodes = np.delete(subNodes,i,0)
+            # print(subNodes)
+            subTopo = np.zeros((topo.shape[0]-1,topo.shape[1]-1),dtype=int)
+            np.fill_diagonal(subTopo,subNodes)
+            # print(subTopo)
+            listSubTopo.append(subTopo)
+            newNodeGraphs = {}
+            for j,graph in enumerate(self.graphs):
+                newNodeGraphs[j] = subTopo
+            
+            labeledTopo = np.zeros((subTopo.shape[0],subTopo.shape[1]),dtype=int)
+            for i in range(subTopo.shape[0]):
+                labeledTopo[i,i] = self.graphs[0][subNodes[i],subNodes[i]]
+            # print("labeledTopo",labeledTopo)
+            # print("newNodeGraphs",newNodeGraphs)
+            eg = ExpansionGraph(
+                labeledTopo,
+                newNodeGraphs,
+                self.graphs,
+                self.freqEdges,
+                self.theta
+            )
+            # eqClasses = eg.expand()
+            freqGraphs.append(eg.expand())
+        print("freqPrevail",freqGraphs)
+        if len(freqGraphs) > 0:
+            maxCanon = ''
+            maxKey = ''
+            for i,eqClass in enumerate(freqGraphs):
+                keyEq = list(eqClass.keys())
+                if len(keyEq) == 0:
+                    continue
+                k = keyEq[0]
+                can = canonicalForm(string2matrix(k))['code']
+                if can > maxCanon:
+                    maxKey = i
+                    maxCanon = can
+
+            # for k,v in freqGraphs.items():
+                # if canonicalForm(string2matrix(k))
+            return freqGraphs[i]
+        subFreqGraphs = [] 
+        for subTopo in listSubTopo:
+            subFreqGraphs.append(self.explorePrevailGraph(subTopo))
+
+        for subFreq in subFreqGraphs:
+            if subFreq.shape != (1,1):
+                return subFreq
+
+        return np.array([[-1]])
+
+
+
+
     def frequentGraph(self):
         graphDemo = np.array([
             [2,11,10,11],
@@ -232,8 +296,16 @@ class GraphCollection():
             [10,0,1,16],
             [15,15,16,3]
         ])
-        results,S = self.exploreGenericTree(self.tempTrees,{})
-        print("S-final",S)
+        # results,S = self.exploreGenericTree(self.tempTrees,{})
+        topo = np.array([
+            [0,0,0,0],
+            [0,1,0,0],
+            [0,0,2,0],
+            [0,0,0,3]
+        ])
+        results = self.explorePrevailGraph(topo)
+        # exit(0)
+        # print("S-final",S)
         print("final result",results.keys())
         if len(results.items()) == 0:
             return []

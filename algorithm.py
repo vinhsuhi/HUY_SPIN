@@ -117,3 +117,18 @@ def extendByCore(X: np.ndarray, Y: np.ndarray):
                     pad[0,i] = Y[iY,j]
                     extensions.append(extend(X.copy(),pad))
     return extensions
+
+def checkConnected(graph : np.ndarray):
+    visited = np.zeros(graph.shape[0],dtype=int)
+    for i in range(graph.shape[0]):
+        indices = np.where(graph[i] > 0)
+        for j in indices[0]:
+            if j != i:
+                visited[j] = 1
+    nonVisited = np.where(visited == 0)
+    # print("checkConnected Graph: ",graph)
+    if nonVisited[0].shape[0] != 0:
+        # print("notConnected")
+        return False
+    # print("connected")
+    return True

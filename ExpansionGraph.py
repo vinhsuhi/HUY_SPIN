@@ -1,6 +1,6 @@
 import numpy as np
 from utils import plotGraph
-from algorithm import canonicalForm,string2matrix
+from algorithm import canonicalForm,string2matrix,checkConnected
 
 
 class ExpansionGraph():
@@ -14,6 +14,8 @@ class ExpansionGraph():
         self.associativeEdges = []
         self.setCandidateEdges(freqEdges_)
         self.setAssociativeEdge()
+        # print("ConFreqEdges",freqEdges_.keys())
+        # print("canEdges: ", self.canEdges)
 
 
     def setCandidateEdges(self,freqEdges):
@@ -51,7 +53,7 @@ class ExpansionGraph():
         newTempGrapsearchGraphhs = {}
         encodeGraph = np.array2string(graph)
 
-        #bottom-up pruning
+        # bottom-up pruning
         codeFullGraph = self.mergeToGraph(graph,canEdges)
         if codeFullGraph in self.spaceGraphs:
             if len(self.spaceGraphs[codeFullGraph].items()) >= self.theta:
@@ -63,19 +65,29 @@ class ExpansionGraph():
 
         #end bottom-up  
         for i,edge in enumerate(canEdges):
+            # print("Jedge",edge)
             canGraph = self.joinEdge(graph.copy(),edge)
+            # print("canGraph",canGraph)
             embedCanGraph = np.array2string(canGraph)
+            topo = {}
             for j in self.spaceGraphs[encodeGraph].keys():
-                topo = []
-                for subGraph in self.spaceGraphs[encodeGraph][j]:
-                    sNode = subGraph[edge[0]] # id source node
-                    dNode = subGraph[edge[1]] # id destination node
-                    if self.graphs[j][sNode,dNode] == edge[2]:
-                        topo.append(subGraph)
-                if len(topo) > 0:
-                    if embedCanGraph not in self.spaceGraphs:
-                        self.spaceGraphs[embedCanGraph] = {}
-                    self.spaceGraphs[embedCanGraph][j] = topo
+                # print("keySpace",self.spaceGraphs[encodeGraph][j])
+                # for subGraph in self.spaceGraphs[encodeGraph][j]:
+                    # print("sub",j,subGraph)
+                subGraph = self.spaceGraphs[encodeGraph][j]
+                # print("jsub",j,subGraph)
+                sNode = subGraph[edge[0],edge[0]] # id source node
+                dNode = subGraph[edge[1],edge[1]] # id destination node
+                if self.graphs[j][sNode,dNode] == edge[2]:
+                    topo[j] = subGraph
+            # print("PREembedCanGraph",embedCanGraph)
+            # print("EncodedGraph",self.spaceGraphs[encodeGraph])
+            # print("PRETopo",len(topo),self.theta)
+            if len(topo.items()) >= self.theta:
+                if embedCanGraph not in self.spaceGraphs:
+                    # print("embedCanGraph",embedCanGraph)
+                    self.spaceGraphs[embedCanGraph] = {}
+                self.spaceGraphs[embedCanGraph] = topo
             if embedCanGraph in self.spaceGraphs:
                 self.searchGraph(canGraph,canEdges[i+1:]) 
             else:
@@ -126,11 +138,12 @@ class ExpansionGraph():
         self.canEdges = newCans
 
     def expand(self):
-        if self.checkLethal():
-            return {}
+        # if self.checkLethal():
+            # return {}
+        # for asEdge in self.associativeEdges:
+            # self.matrixAdj = self.joinEdge(self.matrixAdj,asEdge)
         
-        self.eliminateAssEdges()
-
+        # self.eliminateAssEdges()
         self.searchGraph(self.matrixAdj,self.canEdges)
 
         frequents = {}
@@ -139,14 +152,25 @@ class ExpansionGraph():
                 frequents[k] = v
         
         eqGraphClasses = {}
-        canTree = canonicalForm(self.matrixAdj)['code']    
+        # canTree = canonicalForm(self.matrixAdj)['code']    
         if len(frequents.items()) > 0:
+            maxCan = ''
+            maxKey = ''
             for k,v in frequents.items():
+                # print("expandKey: ",k)
                 subGraph = string2matrix(k)
-                cam = canonicalForm(subGraph)
-                if cam['code'] == canTree:
-                    eqGraphClasses[k] = v
-        # print("eqGraphClass",eqGraphClasses)
+                if checkConnected(subGraph) and np.where(subGraph > 0)[0].shape[0] > subGraph.shape[0]:
+                    can = canonicalForm(subGraph)
+                    print("canCode",can['code'])
+                    if can['code'] > maxCan:
+                        maxKey = k
+                        maxCan = can['code'] 
+                # cam = canonicalForm(subGraph)
+                # if cam['code'] == canTree:
+                # eqGraphClasses[k] = v
+            if maxKey != '':
+                eqGraphClasses[maxKey] = frequents[k]
+        print("eqGraphClass",eqGraphClasses)
 
         return eqGraphClasses
         
