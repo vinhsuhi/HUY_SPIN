@@ -50,14 +50,20 @@ class ExpansionGraph():
         return graph
 
     def searchGraph(self,graph,canEdges):
+        print("lenCanEdges",len(canEdges))
+        if len(canEdges) == 0:
+            return
         newTempGrapsearchGraphhs = {}
         encodeGraph = np.array2string(graph)
 
         # bottom-up pruning
         codeFullGraph = self.mergeToGraph(graph,canEdges)
         if codeFullGraph in self.spaceGraphs:
-            if len(self.spaceGraphs[codeFullGraph].items()) >= self.theta:
-                print("bottom-up aval",codeFullGraph)
+            if len(self.spaceGraphs[codeFullGraph].items()) >= self.theta and not np.array_equal(graph,string2matrix(codeFullGraph)):
+                print("originGraph\n",graph)
+                print("bottom-up aval\n",codeFullGraph)
+                # if np.array_equal(graph,string2matrix(codeFullGraph)):
+                    # print("equalArray")
                 return {
                     codeFullGraph : self.spaceGraphs[codeFullGraph]
                 }
@@ -90,9 +96,9 @@ class ExpansionGraph():
                 self.spaceGraphs[embedCanGraph] = topo
             if embedCanGraph in self.spaceGraphs:
                 self.searchGraph(canGraph,canEdges[i+1:]) 
-            else:
-                self.searchGraph(graph,canEdges[i+1:])
-
+            # else:
+                # self.searchGraph(graph,canEdges[i+1:])
+        # print("returnHere")
         return
 
     def mergeToGraph(self,graph,canEdges):
@@ -116,7 +122,7 @@ class ExpansionGraph():
             if len(topo) > 0:
                 if codeFullGraph not in self.spaceGraphs:
                     self.spaceGraphs[codeFullGraph] = {}
-                self.spaceGraphs[codeFullGraph][idGraph] = topo
+                self.spaceGraphs[codeFullGraph][idGraph] = np.array(topo)
         return codeFullGraph
 
     def checkLethal(self):
@@ -145,7 +151,7 @@ class ExpansionGraph():
         
         # self.eliminateAssEdges()
         self.searchGraph(self.matrixAdj,self.canEdges)
-
+        print("end search Graph")
         frequents = {}
         for k,v in self.spaceGraphs.items():
             if len(v.items()) >= self.theta:
@@ -160,8 +166,9 @@ class ExpansionGraph():
                 # print("expandKey: ",k)
                 subGraph = string2matrix(k)
                 if checkConnected(subGraph) and np.where(subGraph > 0)[0].shape[0] > subGraph.shape[0]:
+                    # print("subCheck",subGraph)
                     can = canonicalForm(subGraph)
-                    print("canCode",can['code'])
+                    # print("canCode",can['code'])
                     if can['code'] > maxCan:
                         maxKey = k
                         maxCan = can['code'] 

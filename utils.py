@@ -2,6 +2,7 @@ import numpy as np
 import os
 import networkx as nx
 import matplotlib.pyplot as plt
+import random
 
 
 def read_graph_corpus(path, label_center_path=None):
@@ -68,4 +69,55 @@ def plotGraph(graph : np.ndarray,isShowedID=True):
     plt.axis('off')
     plt.savefig('./figures/{}.png'.format(np.array2string(graph[0])),format='PNG')
     plt.show()
+
+def generateData():
+    random.seed(10)
+    # nodes = [1,2,3,5,6,8,9,10,11,12,15,18,19,20]
+    nGraphs = 30
+    # nNodes = 20
+    # nodes = [0,2,3,4,5,7,8,11,12,13,15,16,18]
+    nNodes = 10
+    # nodes = [0,1,2,4]
+    nodes = [0,1,2,4,5,6,8,9]
+    maxLabel = 100
+    nodesLabel = [random.randint(0,maxLabel) if x in nodes else 0 for x in range(nNodes)]
+    print(nodesLabel)
+    edges = []
+    for i,node in enumerate(nodes):
+        for j in range(i+1,len(nodes)):
+            if random.randint(0,3) != 0:
+                edges.append((nodes[i],nodes[j],random.randint(0,maxLabel)))
+    print(edges)
+    f = open('./datasets/mico-{}.outx'.format(nNodes),'w')
+
+    for graph in range(nGraphs):
+        nodesGraph = nodesLabel.copy()
+        edgesGraph = edges.copy()
+        for i in range(nNodes):
+            if nodesGraph[i] == 0:
+                iConnected = i
+                # for j in range(i+1,nNodes):
+                while iConnected < nNodes:
+                    iConnected =  random.randint(iConnected + 1,iConnected + nNodes//2)
+                    if iConnected < nNodes:
+                        edgesGraph.append((i,iConnected,random.randint(0,maxLabel)))
+                    else: 
+                        edgesGraph.append((i,nNodes-1,random.randint(0,maxLabel)))
+
+                nodesGraph[i] = random.randint(0,maxLabel)
+        f.write("t # {}\n".format(graph))
+        for i,label in enumerate(nodesGraph):
+            f.write("v {} {}\n".format(i,label))
+        for edge in edgesGraph:
+            f.write("e {} {} {}\n".format(edge[0],edge[1],edge[2]))
+    f.close()
+        # print("idGraph",graph)
+        # print("nodeGraphs",nodesGraph)
+        # print("edgesGraphs",edgesGraph)
+
+        
+
+        
+
+
 

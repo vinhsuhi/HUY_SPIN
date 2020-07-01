@@ -220,7 +220,7 @@ class GraphCollection():
 
     def explorePrevailGraph(self,topo: np.ndarray):
         if topo.shape == (1,1):
-            return topo
+            return {}
         subTopo = np.zeros((topo.shape[0],topo.shape[1]),dtype=int)
         diagonal = topo.diagonal()
         freqGraphs = []
@@ -239,6 +239,8 @@ class GraphCollection():
                 newNodeGraphs[j] = subTopo
             
             labeledTopo = np.zeros((subTopo.shape[0],subTopo.shape[1]),dtype=int)
+            # print(labeledTopo)
+            # print(self.graphs[0])
             for i in range(subTopo.shape[0]):
                 labeledTopo[i,i] = self.graphs[0][subNodes[i],subNodes[i]]
             # print("labeledTopo",labeledTopo)
@@ -268,21 +270,25 @@ class GraphCollection():
 
             # for k,v in freqGraphs.items():
                 # if canonicalForm(string2matrix(k))
-            return freqGraphs[i]
+            if maxKey != '':
+                return freqGraphs[maxKey]
         subFreqGraphs = [] 
         for subTopo in listSubTopo:
             subFreqGraphs.append(self.explorePrevailGraph(subTopo))
 
         for subFreq in subFreqGraphs:
-            if subFreq.shape != (1,1):
+            print("subFreq",subFreq)
+            # if subFreq is dic
+            # subFreqGraph = string2matrix(subFreq)
+            if bool(subFreq):
                 return subFreq
 
-        return np.array([[-1]])
+        return {}#np.array([[-1]])
 
 
 
 
-    def frequentGraph(self):
+    def frequentGraph(self,nodes: List):
         graphDemo = np.array([
             [2,11,10,11],
             [11,1,0,11],
@@ -303,9 +309,19 @@ class GraphCollection():
             [0,0,2,0],
             [0,0,0,3]
         ])
-        results = self.explorePrevailGraph(topo)
+
+        # idNodes = [i for i in range(4)] #[1,2,3,5,6,8,9,10,11,12,15,18,19,20]
+        nodes = [i for i in range(10)]
+        # nodes = [1,2,3,4,5]
+        # nodes = [0,2,3,4,5,7,8]
+
+        idNodes = [i for i in nodes]
+        commonTopo = np.zeros((len(idNodes),len(idNodes)),dtype=int)
+        np.fill_diagonal(commonTopo,idNodes)
+        print(commonTopo)
+        results = self.explorePrevailGraph(commonTopo)
         # exit(0)
-        # print("S-final",S)
+        print("S-final",results)
         print("final result",results.keys())
         if len(results.items()) == 0:
             return []

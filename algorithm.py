@@ -120,11 +120,11 @@ def extendByCore(X: np.ndarray, Y: np.ndarray):
 
 def checkConnected(graph : np.ndarray):
     visited = np.zeros(graph.shape[0],dtype=int)
+    visited[0] = 1
     for i in range(graph.shape[0]):
-        indices = np.where(graph[i] > 0)
+        indices = np.where(graph[i][i+1:] > 0)
         for j in indices[0]:
-            if j != i:
-                visited[j] = 1
+            visited[i+j+1] = 1
     nonVisited = np.where(visited == 0)
     # print("checkConnected Graph: ",graph)
     if nonVisited[0].shape[0] != 0:
