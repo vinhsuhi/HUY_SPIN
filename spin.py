@@ -4,7 +4,7 @@ from algorithm import string2matrix
 import numpy as np
 import json 
 
-datasets = "mico-10"
+datasets = "mico-20"
 graphs = readGraphs('./datasets/{}.outx'.format(datasets))
 
 def extractResultGraph(results):

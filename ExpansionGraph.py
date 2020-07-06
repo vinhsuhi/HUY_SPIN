@@ -14,6 +14,7 @@ class ExpansionGraph():
         self.associativeEdges = []
         self.setCandidateEdges(freqEdges_)
         self.setAssociativeEdge()
+        # print("topoGraphs",topoGraphs_)
         # print("ConFreqEdges",freqEdges_.keys())
         # print("canEdges: ", self.canEdges)
 
@@ -48,9 +49,11 @@ class ExpansionGraph():
         graph[edge[0],edge[1]] = edge[2]
         graph[edge[1],edge[0]] = edge[2]
         return graph
-
+    
+    countSearch = 0
     def searchGraph(self,graph,canEdges):
-        print("lenCanEdges",len(canEdges))
+        print("lenCanEdges",self.countSearch)
+        self.countSearch = self.countSearch + 1
         if len(canEdges) == 0:
             return
         newTempGrapsearchGraphhs = {}
@@ -71,7 +74,7 @@ class ExpansionGraph():
 
         #end bottom-up  
         for i,edge in enumerate(canEdges):
-            # print("Jedge",edge)
+            print("Jedge",len(canEdges))
             canGraph = self.joinEdge(graph.copy(),edge)
             # print("canGraph",canGraph)
             embedCanGraph = np.array2string(canGraph)
@@ -85,7 +88,13 @@ class ExpansionGraph():
                 sNode = subGraph[edge[0],edge[0]] # id source node
                 dNode = subGraph[edge[1],edge[1]] # id destination node
                 if self.graphs[j][sNode,dNode] == edge[2]:
-                    topo[j] = subGraph
+                    # subGraph[sNode,dNode] = edge[2]
+                    # subGraph[dNode,sNode] = edge[2]
+                    connectedSub = subGraph.copy()
+                    # print("connectedSub",connectedSub)
+                    connectedSub[edge[0],edge[1]] = edge[2]
+                    connectedSub[edge[1],edge[0]] = edge[2]
+                    topo[j] = connectedSub
             # print("PREembedCanGraph",embedCanGraph)
             # print("EncodedGraph",self.spaceGraphs[encodeGraph])
             # print("PRETopo",len(topo),self.theta)
@@ -109,20 +118,25 @@ class ExpansionGraph():
 
         codeFullGraph = np.array2string(fullGraph)
         for idGraph in self.spaceGraphs[encodeGraph].keys():
-            topo = []
-            for sub in self.spaceGraphs[encodeGraph][idGraph]:
-                subGraph = sub.copy()
-                flag = True
-                for i,edge in enumerate(canEdges):
-                    if  self.graphs[idGraph][subGraph[edge[0]],subGraph[edge[1]]] != edge[2]:
-                        flag = False
-                        break
-                if flag:
-                    topo.append(subGraph)
-            if len(topo) > 0:
+            # topo = []
+            # for sub in self.spaceGraphs[encodeGraph][idGraph]:
+            subGraph = self.spaceGraphs[encodeGraph][idGraph].copy()#sub.copy()
+            # print("subGraph",subGraph)
+            flag = True
+            for i,edge in enumerate(canEdges):
+                if  self.graphs[idGraph][subGraph[edge[0],edge[0]],subGraph[edge[1],edge[1]]] != edge[2]:
+                    flag = False
+                    break
+                else:
+                    subGraph[edge[0],edge[1]] = edge[2]
+                    subGraph[edge[1],edge[0]] = edge[2]
+
+            if flag:
+                # topo.append(subGraph)
+            # if len(topo) > 0:
                 if codeFullGraph not in self.spaceGraphs:
                     self.spaceGraphs[codeFullGraph] = {}
-                self.spaceGraphs[codeFullGraph][idGraph] = np.array(topo)
+                self.spaceGraphs[codeFullGraph][idGraph] = subGraph #np.array(topo)
         return codeFullGraph
 
     def checkLethal(self):
@@ -130,6 +144,7 @@ class ExpansionGraph():
         for asEdge in self.associativeEdges:
             self.matrixAdj = self.joinEdge(self.matrixAdj,asEdge)
         
+
         if canonicalForm(initialTree)['code'] != canonicalForm(self.matrixAdj)['code']:
             return True
         

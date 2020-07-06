@@ -311,7 +311,7 @@ class GraphCollection():
         ])
 
         # idNodes = [i for i in range(4)] #[1,2,3,5,6,8,9,10,11,12,15,18,19,20]
-        nodes = [i for i in range(10)]
+        nodes = [i for i in range(20)]
         # nodes = [1,2,3,4,5]
         # nodes = [0,2,3,4,5,7,8]
 
